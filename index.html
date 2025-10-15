@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GovWare Network Access</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0b0c10;
+      --panel: #fff;
+      --text: #1f2833;
+      --muted: #6b7280;
+      --primary: #0ea5e9;
+      --primary-contrast: #fff;
+      --border: #e5e7eb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --panel: #111827;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --border: #1f2937;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: linear-gradient(135deg, #0ea5e933, transparent 60%), linear-gradient(45deg, #10b98133, transparent 60%);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 520px;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .badge {
+      background: #0ea5e91a;
+      color: var(--primary);
+      border: 1px solid #0ea5e94d;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .content { padding: 20px 24px; line-height: 1.6; }
+    p { margin: 0 0 12px; color: var(--muted); }
+
+    .terms {
+      background: rgba(125,125,125,0.06);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      margin: 12px 0 0;
+      font-size: 14px;
+      color: var(--text);
+      max-height: 160px;
+      overflow: auto;
+    }
+
+    .footer {
+      padding: 16px 24px 24px;
+      display: grid;
+      gap: 12px;
+    }
+    .check {
+      display: flex;
+      align-items: start;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text);
+    }
+    .check input { margin-top: 2px; }
+
+    button {
+      appearance: none;
+      border: none;
+      background: var(--primary);
+      color: var(--primary-contrast);
+      font-weight: 600;
+      padding: 12px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: transform 0.04s ease, opacity 0.2s ease;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    button:active { transform: translateY(1px); }
+  </style>
+</head>
+<body>
+  <main class="card" role="main">
+    <div class="header">
+      <span class="badge">GovWare</span>
+      <h1>Connecting to GovWare Network</h1>
+    </div>
+
+    <div class="content">
+      <p>To access the GovWare network, you must review and accept the Terms and Conditions.</p>
+      <div class="terms" aria-label="Terms and Conditions" tabindex="0">
+        <p><strong>Terms & Conditions (Summary)</strong></p>
+        <p>By connecting to this network, you agree to comply with all applicable laws and organizational policies. Network activity may be monitored for security and compliance. Unauthorized access or misuse is prohibited and may result in disciplinary action or legal consequences. Do not transmit sensitive data unless authorized. Disconnect immediately if you suspect a security incident and report it to the administrator.</p>
+        <p>Use of this service implies consent to the above terms.</p>
+      </div>
+    </div>
+
+    <form class="footer" id="acceptForm">
+      <label class="check">
+        <input type="checkbox" id="acceptChk" />
+        <span>I have read and accept the Terms and Conditions.</span>
+      </label>
+      <button id="acceptBtn" type="submit" disabled>Accept and Continue</button>
+    </form>
+  </main>
+
+  <script src="/fpjs/v4.min.js"></script>
+  <script>
+    (function () {
+      const chk = document.getElementById('acceptChk');
+      const btn = document.getElementById('acceptBtn');
+      const form = document.getElementById('acceptForm');
+      let fingerprintData = null;
+
+      function sync() {
+        btn.disabled = !chk.checked;
+      }
+
+      // Initialize FingerprintJS
+      async function initFingerprint() {
+        try {
+          const fpPromise = FingerprintJS.load();
+          const fp = await fpPromise;
+          const result = await fp.get();
+          fingerprintData = {
+            visitorId: result.visitorId,
+            components: result.components,
+            confidence: result.confidence
+          };
+          console.log('[FingerprintJS] Visitor ID:', result.visitorId);
+        } catch (err) {
+          console.error('[FingerprintJS] Error:', err);
+        }
+      }
+
+      chk.addEventListener('change', sync);
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!chk.checked) return;
+        
+        // Notify the portal server that this client accepted
+        fetch('/accept', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fingerprintData || {}),
+          keepalive: true
+        }).catch(() => {})
+          .finally(() => {
+            window.location.href = 'https://duckduckgo.com/';
+          });
+      });
+
+      // Initialize
+      sync();
+      initFingerprint();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "captive-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal captive portal with RFC 8908 API and DHCP Option 114 support (Node + Python)",
+  "main": "server-node.js",
+  "scripts": {
+    "start:node": "node server-node.js",
+    "start:server1": "node server1.js",
+    "start:python": "python3 server.py"
+  },
+  "dependencies": {
+    "@fingerprintjs/fingerprintjs": "^4.5.0",
+    "express": "^4.19.2",
+    "mongoose": "^7.8.1"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}
