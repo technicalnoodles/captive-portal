@@ -30,9 +30,11 @@
       margin: 0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
       background: linear-gradient(135deg, #0ea5e933, transparent 60%), linear-gradient(45deg, #10b98133, transparent 60%);
-      display: grid;
-      place-items: center;
-      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0;
+      min-height: 100vh;
     }
 
     .card {
@@ -44,6 +46,38 @@
       border-radius: 16px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.15);
       overflow: hidden;
+    }
+
+    .banner-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .banner {
+      width: 100%;
+      height: auto;
+      display: block;
+      max-width: 100vw;
+    }
+
+    .logo-overlay {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      height: 80px;
+      width: auto;
+      z-index: 10;
+    }
+
+    .container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      padding: 24px;
+      flex: 1;
+      justify-content: center;
     }
 
     .header {
@@ -113,21 +147,86 @@
       cursor: not-allowed;
     }
     button:active { transform: translateY(1px); }
+
+    /* Mobile responsive styles */
+    @media (max-width: 768px) {
+      .logo-overlay {
+        height: 50px;
+        top: 10px;
+        left: 10px;
+      }
+
+      .container {
+        padding: 16px;
+        gap: 16px;
+      }
+
+      .card {
+        border-radius: 12px;
+      }
+
+      .header {
+        padding: 16px;
+      }
+
+      h1 {
+        font-size: 16px;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .footer {
+        padding: 12px 16px 16px;
+      }
+
+      .terms {
+        font-size: 13px;
+        max-height: 200px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logo-overlay {
+        height: 40px;
+        top: 8px;
+        left: 8px;
+      }
+
+      h1 {
+        font-size: 14px;
+      }
+
+      .badge {
+        font-size: 10px;
+        padding: 3px 8px;
+      }
+
+      .terms {
+        font-size: 12px;
+      }
+    }
   </style>
 </head>
 <body>
-  <main class="card" role="main">
-    <div class="header">
+  <div class="banner-wrapper">
+    <img src="imgs/GW25%20Splash%20Screen%20Background.png" alt="GovWare 2025 Banner" class="banner" />
+    <img src="imgs/GW%20+%20SICW%20Logo%20Lock-up%20Full%20Colour.png" alt="GovWare 2025 Logo" class="logo-overlay" />
+  </div>
+  <div class="container">
+    <main class="card" role="main">
+      <div class="header">
       <span class="badge">GovWare</span>
       <h1>Connecting to GovWare Network</h1>
     </div>
 
     <div class="content">
+        
       <p>To access the GovWare network, you must review and accept the Terms and Conditions.</p>
       <div class="terms" aria-label="Terms and Conditions" tabindex="0">
-        <p><strong>Terms & Conditions (Summary)</strong></p>
-        <p>By connecting to this network, you agree to comply with all applicable laws and organizational policies. Network activity may be monitored for security and compliance. Unauthorized access or misuse is prohibited and may result in disciplinary action or legal consequences. Do not transmit sensitive data unless authorized. Disconnect immediately if you suspect a security incident and report it to the administrator.</p>
-        <p>Use of this service implies consent to the above terms.</p>
+        <p><strong>IMPORTANT!</strong> The GovWare wireless network available at Sands Expo and Convention Centre is an open 5 GHz network, provided in partnership with Cisco Systems. Cisco Systems and Endace will be using data from the MBS wireless network to provide Security Operation Services and attendee education for GovWare 2025. As with any public Wi-Fi, we recommend following standard best practices such as using a VPN connection, installing a personal firewall, keeping your operating system updated, turning off your wireless adapter when not in use, and disabling ad-hoc (peer-to-peer) capabilities on your device.</p>
+        <p>By connecting to the GOVWARE wireless network, you are consenting all <a href="https://www.govware.sg/code-of-conduct">Terms & Conditions and Code of Conduct of GovWare Conference & Exhibition 2025</a> and our <a href="https://www.govware.sg/data-protection-and-privacy-notice">Data Protection and Privacy Notice</a>.</p>
       </div>
     </div>
 
@@ -139,6 +238,7 @@
       <button id="acceptBtn" type="submit" disabled>Accept and Continue</button>
     </form>
   </main>
+  </div>
 
   <script src="/fpjs/v4.min.js"></script>
   <script>
@@ -182,7 +282,7 @@
           keepalive: true
         }).catch(() => {})
           .finally(() => {
-            window.location.href = 'https://duckduckgo.com/';
+            window.location.href = 'https://www.govware.sg/';
           });
       });
 

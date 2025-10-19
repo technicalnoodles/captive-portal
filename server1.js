@@ -167,6 +167,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Serve static files from imgs directory
+app.use('/imgs', express.static(path.join(__dirname, 'imgs')));
+
 // Serve FingerprintJS library from node_modules
 app.get('/fpjs/v4.min.js', (req, res) => {
   const fpjsPath = path.join(__dirname, 'node_modules/@fingerprintjs/fingerprintjs/dist/fp.min.js');
@@ -273,6 +276,11 @@ app.post(ACCEPT_PATH, (req, res) => {
   
   noStore(res).status(204).send('');
 });
+
+app.get('/aws-health', (req, res) => {
+  res.status(200).send('some text');
+  }
+);
 
 // Start server
 if (require.main === module) {
