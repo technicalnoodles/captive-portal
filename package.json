@@ -6,7 +6,7 @@
   "main": "server-node.js",
   "scripts": {
     "start:node": "node server-node.js",
-    "start:server1": "node server1.js",
+    "start:server1": "node index.js",
     "start:python": "python3 server.py"
   },
   "dependencies": {
