@@ -1,4 +1,4 @@
-# Captive Portal (DHCP Option 114 + RFC 8908)
+# Captive Portal (DHCP Option 114 + RFC 8910 & 8908)
 
 A minimal captive portal compatible with DHCP Option 114 (RFC 8910) and the Captive Portal API (RFC 8908). It serves a terms-and-conditions page and tracks acceptance so clients can be marked as not captive.
 
