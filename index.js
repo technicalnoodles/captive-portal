@@ -212,14 +212,35 @@ app.get('/', (req, res) => {
   noStore(res).redirect(302, PORTAL_PATH);
 });
 
-// Android/iOS connectivity check handlers
-// These endpoints are probed by mobile devices to detect captive portals
+// Apple-specific captive portal detection
+// iOS/macOS expects specific HTML response with "Success"
+app.get('/hotspot-detect.html', (req, res) => {
+  const clientIP = getClientIP(req);
+  
+  if (ACCEPTED.has(clientIP)) {
+    // Client has accepted - return Apple's expected success page
+    const successHTML = '<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>';
+    noStore(res).status(200).send(successHTML);
+  } else {
+    // Client hasn't accepted - redirect to portal
+    noStore(res).redirect(302, portalUrlFromHost(req.headers.host));
+  }
+});
+
+// Android/iOS/Linux connectivity check handlers
+// These endpoints are probed by mobile devices and Linux to detect captive portals
 const connectivityCheckPaths = [
+  // Android
   '/generate_204',
   '/gen_204',
+  // Windows
   '/ncsi.txt',
   '/success.txt',
-  '/hotspot-detect.html'
+  // Linux NetworkManager (Ubuntu, Debian, Fedora)
+  '/connectivity-check',
+  '/connectivity-check.html',
+  '/check_network_status.txt',
+  '/static/hotspot.txt'
 ];
 
 app.get(connectivityCheckPaths, (req, res) => {
@@ -236,15 +257,28 @@ app.get(connectivityCheckPaths, (req, res) => {
 });
 
 // Catch-all for any domain's connectivity check
-// This handles requests to connectivitycheck.gstatic.com, clients3.google.com, etc.
+// This handles requests to connectivitycheck.gstatic.com, clients3.google.com, 
+// connectivity-check.ubuntu.com, fedoraproject.org, captive.apple.com, etc.
 app.use((req, res, next) => {
   const path = req.path;
   const clientIP = getClientIP(req);
   
-  // Check if this looks like a connectivity check probe
+  // Apple hotspot-detect needs special handling
+  if (path === '/hotspot-detect.html' || path.includes('hotspot-detect')) {
+    if (ACCEPTED.has(clientIP)) {
+      const successHTML = '<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>';
+      return noStore(res).status(200).send(successHTML);
+    } else {
+      return noStore(res).redirect(302, portalUrlFromHost(req.headers.host));
+    }
+  }
+  
+  // Other connectivity check probes
   if (path.includes('generate_204') || path.includes('gen_204') || 
       path === '/ncsi.txt' || path === '/success.txt' || 
-      path === '/hotspot-detect.html') {
+      path.includes('connectivity-check') ||
+      path === '/check_network_status.txt' ||
+      path.includes('/static/hotspot')) {
     
     if (ACCEPTED.has(clientIP)) {
       return noStore(res).status(204).send('');

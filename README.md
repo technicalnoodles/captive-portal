@@ -4,29 +4,12 @@ A minimal captive portal compatible with DHCP Option 114 (RFC 8910) and the Capt
 
 ## Files
 - `index.html` — Portal UI with checkbox and Accept button (redirects to DuckDuckGo).
-- `server.py` — Python HTTP server:
+- `index.js` — Node.js/Express HTTP server:
   - Serves Captive Portal API at `/.well-known/captive-portal`.
   - Serves UI at `/portal`.
   - Accept endpoint at `/accept` (marks client as accepted).
 
 ## Quick Start
-
-### Run with Python
-1. Requirements: Python 3.8+
-2. Start the server:
-   ```bash
-   python3 server.py
-   ```
-3. Portal UI:
-   ```
-   http://<server>:8000/portal
-   ```
-4. Captive Portal API URI (DHCP Option 114 value):
-   ```
-   http://<server>:8000/.well-known/captive-portal
-   ```
-
-### Run with Node.js
 1. Requirements: Node.js 16+
 2. Install dependencies:
    ```bash
@@ -34,9 +17,7 @@ A minimal captive portal compatible with DHCP Option 114 (RFC 8910) and the Capt
    ```
 3. Start the server:
    ```bash
-   npm run start:node
-   # or
-   node server-node.js
+   npm start
    ```
 4. Portal UI:
    ```
@@ -180,3 +161,61 @@ Examples:
   - Confirm client can reach `/.well-known/captive-portal`.
   - Ensure clients and server see distinct client IPs (NAT may cause sharing).
 - If the server restarts, acceptance state is lost (in-memory). Consider persistence.
+
+### Apple (iOS/macOS) Detection Issues
+Apple devices require **specific responses** to properly detect captive portals:
+
+**Apple's Captive Portal Detection:**
+1. **Domain**: Apple devices probe `captive.apple.com` and other Apple domains
+2. **Endpoint**: `/hotspot-detect.html`
+3. **Expected Response**:
+   - **Not Captive** (after acceptance): HTTP 200 with exact HTML: `<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>`
+   - **Captive** (before acceptance): HTTP 302 redirect to portal
+
+**This server now correctly handles Apple detection** with a dedicated `/hotspot-detect.html` endpoint.
+
+**Testing Apple Detection:**
+```bash
+# Test Apple captive portal endpoint (before acceptance)
+curl -v http://your-portal-ip:8000/hotspot-detect.html
+# Should return: 302 redirect to /portal
+
+# After acceptance, should return:
+# HTTP 200 with: <HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>
+```
+
+**Critical Requirements:**
+- **DNS Interception**: Must redirect `captive.apple.com` to your portal server
+- **HTTP Port 80**: Apple probes on port 80, so either run on port 80 or use port forwarding/NAT
+- **No HTTPS Required**: Apple uses HTTP (not HTTPS) for initial detection
+
+### Linux-Specific Issues
+Linux systems (NetworkManager, systemd-networkd) may not detect your captive portal without proper network configuration:
+
+**Requirements for Linux Detection:**
+1. **DNS Interception**: Your network must intercept DNS queries and redirect them to your captive portal server. Without this, Linux will successfully resolve external domains (e.g., `connectivity-check.ubuntu.com`) and never hit your portal.
+
+2. **HTTP Interception**: Your network firewall/router must intercept all HTTP traffic on port 80 and redirect it to your captive portal server.
+
+3. **Connectivity Check Endpoints**: This server now includes handlers for Linux connectivity check paths:
+   - `/connectivity-check`
+   - `/connectivity-check.html`
+   - `/check_network_status.txt`
+   - `/static/hotspot.txt`
+
+**Testing Linux Detection:**
+```bash
+# Test connectivity check endpoint
+curl -v http://your-portal-ip:8000/connectivity-check
+
+# Should return 302 redirect to portal (before acceptance)
+# Should return 204 No Content (after acceptance)
+```
+
+**Common Linux NetworkManager URLs:**
+- Ubuntu/Debian: `http://connectivity-check.ubuntu.com`
+- Fedora/RHEL: `http://fedoraproject.org/static/hotspot.txt`
+- Arch Linux: `http://www.archlinux.org/check_network_status.txt`
+
+**Network Configuration Required:**
+Without DNS/HTTP interception at the network level, Linux and Apple clients will bypass your captive portal entirely. This requires configuration on your DHCP server, router, or firewall (e.g., dnsmasq, iptables, etc.).
